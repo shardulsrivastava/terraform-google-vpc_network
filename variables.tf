@@ -16,7 +16,7 @@ variable "ip_ranges" {
   type = object({
     public             = list(string)                                   # list of CIDR ranges - each with their /x parts (/20 advised) for public subnets of the VPC.
     private_primary    = string                                         # a CIDR range including /x part (/20 advised) for primary IPs in private subnet of the VPC.
-    private_k8s        = list(object({ pods = string, svcs = string })) # list of objects of CIDR ranges - each with their /x parts (/20 advised) - for pods & services in a k8s cluster.
+    private_k8s        = list(object({ name = string, pods = string, svcs = string })) # list of objects of CIDR ranges - each with their /x parts (/20 advised) - for pods & services in a k8s cluster.
     private_redis      = list(string)                                   # list of CIDR ranges - each with their /x parts (/29 advised) - for Redis. See https://www.terraform.io/docs/providers/google/r/redis_instance.html#reserved_ip_range
     private_g_services = string                                         # a CIDR range including /x part (/20 advised) for Google services producers (like CloudSQL, Firebase, etc) in private subnet of the VPC.
     proxy_only         = string                                         # an empty string or a CIDR range including /x part (/24 advised) for Proxy-Only subnet. Use empty string "" to avoid creating Proxy-Only subnet. See https://cloud.google.com/load-balancing/docs/l7-internal/proxy-only-subnets#proxy_only_subnet_create
@@ -140,4 +140,31 @@ variable "nat_timeout" {
   description = "how long a Cloud NAT operation is allowed to take before being considered a failure."
   type        = string
   default     = "10m"
+}
+variable "gcp_project_id" {
+  description = "Id of the GCP project"
+  type        = string
+  validation {
+    condition     = can(regex("^[a-z]{2,7}-[a-z0-9]{3,18}-[a-z]{3}$", var.gcp_project_id))
+    error_message = "Must be of this format: `org-project-env` and a max of 30 characters."
+  }
+}
+
+# variable "tf_env" {
+#   description = "Just an identifier that will be used in GCP resource names. Will help us distinguish resources created by Terraform versus resources that were already created before Terraform"
+#   type        = string
+#   validation {
+#     condition     = length(var.tf_env) <= 5
+#     error_message = "A max of 5 character(s) are allowed."
+#   }
+# }
+
+variable "region" {
+  description = "Region for GCP resources. See https://cloud.google.com/compute/docs/regions-zones"
+  type        = string
+}
+
+variable "terraform_owner_email" {
+  description = "Email address of the ServiceAccount that can be impersonated to perform TF operations"
+  type        = string
 }
